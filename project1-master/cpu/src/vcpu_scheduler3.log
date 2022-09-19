@@ -1,0 +1,181 @@
+Script started on 2022-09-19 01:33:10+00:00 [TERM="xterm-256color" TTY="/dev/pts/14" COLUMNS="185" LINES="16"]
+]0;vagrant@vagrant: /vagrant/cpu/test[01;32mvagrant@vagrant[00m:[01;34m/vagrant/cpu/test[00m$ exitpython3 monitor.py -t runtest2.py[1P.py3.py
+
+--------------------------------------------------
+Iteration number :  1
+0 - usage: 0.0 | mapping []
+1 - usage: 0.0 | mapping []
+2 - usage: 0.0 | mapping []
+3 - usage: 0.0 | mapping []
+
+--------------------------------------------------
+Iteration number :  2
+0 - usage: 1.0 | mapping ['aos_vm1', 'aos_vm2']
+1 - usage: 0.0 | mapping ['aos_vm4', 'aos_vm3']
+2 - usage: 0.0 | mapping ['aos_vm7', 'aos_vm5']
+3 - usage: 0.0 | mapping ['aos_vm8', 'aos_vm6']
+
+--------------------------------------------------
+Iteration number :  3
+0 - usage: 0.0 | mapping ['aos_vm1', 'aos_vm2']
+1 - usage: 1.0 | mapping ['aos_vm4', 'aos_vm3']
+2 - usage: 0.0 | mapping ['aos_vm7', 'aos_vm5']
+3 - usage: 1.0 | mapping ['aos_vm8', 'aos_vm6']
+
+--------------------------------------------------
+Iteration number :  4
+0 - usage: 1.0 | mapping ['aos_vm1', 'aos_vm2']
+1 - usage: 0.0 | mapping ['aos_vm4', 'aos_vm3']
+2 - usage: 1.0 | mapping ['aos_vm7', 'aos_vm5']
+3 - usage: 1.0 | mapping ['aos_vm8', 'aos_vm6']
+
+--------------------------------------------------
+Iteration number :  5
+0 - usage: 0.0 | mapping ['aos_vm1', 'aos_vm2']
+1 - usage: 0.0 | mapping ['aos_vm4', 'aos_vm3']
+2 - usage: 0.0 | mapping ['aos_vm7', 'aos_vm5']
+3 - usage: 0.0 | mapping ['aos_vm8', 'aos_vm6']
+
+--------------------------------------------------
+Iteration number :  6
+0 - usage: 3.0 | mapping ['aos_vm2']
+1 - usage: 12.000000000000002 | mapping ['aos_vm1', 'aos_vm4', 'aos_vm8', 'aos_vm6', 'aos_vm3']
+2 - usage: 2.0 | mapping ['aos_vm7']
+3 - usage: 3.0 | mapping ['aos_vm5']
+
+--------------------------------------------------
+Iteration number :  7
+0 - usage: 89.99999999999999 | mapping ['aos_vm1', 'aos_vm3']
+1 - usage: 104.0 | mapping ['aos_vm4', 'aos_vm2']
+2 - usage: 89.0 | mapping ['aos_vm7', 'aos_vm6']
+3 - usage: 95.0 | mapping ['aos_vm8', 'aos_vm5']
+
+--------------------------------------------------
+Iteration number :  8
+0 - usage: 101.0 | mapping ['aos_vm1', 'aos_vm3']
+1 - usage: 99.0 | mapping ['aos_vm4', 'aos_vm6']
+2 - usage: 98.0 | mapping ['aos_vm7', 'aos_vm5']
+3 - usage: 96.0 | mapping ['aos_vm8', 'aos_vm2']
+
+--------------------------------------------------
+Iteration number :  9
+0 - usage: 68.0 | mapping ['aos_vm1', 'aos_vm3']
+1 - usage: 48.0 | mapping ['aos_vm4', 'aos_vm5']
+2 - usage: 86.0 | mapping ['aos_vm7', 'aos_vm2']
+3 - usage: 67.0 | mapping ['aos_vm8', 'aos_vm6']
+
+--------------------------------------------------
+Iteration number :  10
+0 - usage: 73.0 | mapping ['aos_vm1', 'aos_vm3']
+1 - usage: 72.0 | mapping ['aos_vm4', 'aos_vm2']
+2 - usage: 73.0 | mapping ['aos_vm7', 'aos_vm5']
+3 - usage: 70.0 | mapping ['aos_vm8', 'aos_vm6']
+
+--------------------------------------------------
+Iteration number :  11
+0 - usage: 75.0 | mapping ['aos_vm1', 'aos_vm3']
+1 - usage: 75.0 | mapping ['aos_vm4', 'aos_vm6']
+2 - usage: 76.0 | mapping ['aos_vm7', 'aos_vm5']
+3 - usage: 74.0 | mapping ['aos_vm8', 'aos_vm2']
+
+--------------------------------------------------
+Iteration number :  12
+0 - usage: 95.0 | mapping ['aos_vm1', 'aos_vm6']
+1 - usage: 66.0 | mapping ['aos_vm4', 'aos_vm5']
+2 - usage: 94.0 | mapping ['aos_vm7', 'aos_vm2']
+3 - usage: 69.0 | mapping ['aos_vm8', 'aos_vm3']
+
+--------------------------------------------------
+Iteration number :  13
+0 - usage: 76.0 | mapping ['aos_vm1', 'aos_vm5']
+1 - usage: 77.0 | mapping ['aos_vm4', 'aos_vm2']
+2 - usage: 79.0 | mapping ['aos_vm7', 'aos_vm3']
+3 - usage: 78.0 | mapping ['aos_vm8', 'aos_vm6']
+
+--------------------------------------------------
+Iteration number :  14
+0 - usage: 99.0 | mapping ['aos_vm1', 'aos_vm6']
+1 - usage: 65.0 | mapping ['aos_vm4', 'aos_vm5']
+2 - usage: 98.0 | mapping ['aos_vm7', 'aos_vm2']
+3 - usage: 62.0 | mapping ['aos_vm8', 'aos_vm3']
+
+--------------------------------------------------
+Iteration number :  15
+0 - usage: 79.0 | mapping ['aos_vm1', 'aos_vm3']
+1 - usage: 51.0 | mapping ['aos_vm4', 'aos_vm5']
+2 - usage: 98.0 | mapping ['aos_vm7', 'aos_vm2']
+3 - usage: 73.0 | mapping ['aos_vm8', 'aos_vm6']
+
+--------------------------------------------------
+Iteration number :  16
+0 - usage: 81.0 | mapping ['aos_vm1', 'aos_vm3']
+1 - usage: 56.00000000000001 | mapping ['aos_vm4', 'aos_vm5']
+2 - usage: 98.0 | mapping ['aos_vm7', 'aos_vm2']
+3 - usage: 80.0 | mapping ['aos_vm8', 'aos_vm6']
+
+--------------------------------------------------
+Iteration number :  17
+0 - usage: 79.0 | mapping ['aos_vm1', 'aos_vm3']
+1 - usage: 78.0 | mapping ['aos_vm4', 'aos_vm2']
+2 - usage: 77.0 | mapping ['aos_vm7', 'aos_vm5']
+3 - usage: 76.0 | mapping ['aos_vm8', 'aos_vm6']
+
+--------------------------------------------------
+Iteration number :  18
+0 - usage: 78.0 | mapping ['aos_vm1', 'aos_vm3']
+1 - usage: 76.0 | mapping ['aos_vm4', 'aos_vm6']
+2 - usage: 79.0 | mapping ['aos_vm7', 'aos_vm5']
+3 - usage: 77.0 | mapping ['aos_vm8', 'aos_vm2']
+
+--------------------------------------------------
+Iteration number :  19
+0 - usage: 78.0 | mapping ['aos_vm1', 'aos_vm3']
+1 - usage: 61.0 | mapping ['aos_vm4', 'aos_vm5']
+2 - usage: 89.0 | mapping ['aos_vm7', 'aos_vm2']
+3 - usage: 77.0 | mapping ['aos_vm8', 'aos_vm6']
+
+--------------------------------------------------
+Iteration number :  20
+0 - usage: 78.0 | mapping ['aos_vm1', 'aos_vm3']
+1 - usage: 55.00000000000001 | mapping ['aos_vm4', 'aos_vm5']
+2 - usage: 98.0 | mapping ['aos_vm7', 'aos_vm2']
+3 - usage: 75.0 | mapping ['aos_vm8', 'aos_vm6']
+
+--------------------------------------------------
+Iteration number :  21
+0 - usage: 80.0 | mapping ['aos_vm1', 'aos_vm3']
+1 - usage: 75.0 | mapping ['aos_vm4', 'aos_vm2']
+2 - usage: 78.0 | mapping ['aos_vm7', 'aos_vm5']
+3 - usage: 78.0 | mapping ['aos_vm8', 'aos_vm6']
+
+--------------------------------------------------
+Iteration number :  22
+0 - usage: 83.0 | mapping ['aos_vm1', 'aos_vm3']
+1 - usage: 79.0 | mapping ['aos_vm4', 'aos_vm2']
+2 - usage: 98.0 | mapping ['aos_vm7', 'aos_vm6']
+3 - usage: 68.0 | mapping ['aos_vm8', 'aos_vm5']
+
+--------------------------------------------------
+Iteration number :  23
+0 - usage: 96.0 | mapping ['aos_vm1', 'aos_vm2']
+1 - usage: 74.0 | mapping ['aos_vm4', 'aos_vm3']
+2 - usage: 88.0 | mapping ['aos_vm7', 'aos_vm5']
+3 - usage: 86.0 | mapping ['aos_vm8', 'aos_vm6']
+
+--------------------------------------------------
+Iteration number :  24
+0 - usage: 80.0 | mapping ['aos_vm1', 'aos_vm3']
+1 - usage: 58.00000000000001 | mapping ['aos_vm4', 'aos_vm5']
+2 - usage: 99.0 | mapping ['aos_vm7', 'aos_vm2']
+3 - usage: 80.0 | mapping ['aos_vm8', 'aos_vm6']
+
+--------------------------------------------------
+Iteration number :  25
+0 - usage: 95.0 | mapping ['aos_vm1', 'aos_vm2']
+1 - usage: 65.0 | mapping ['aos_vm4', 'aos_vm3']
+2 - usage: 80.0 | mapping ['aos_vm7', 'aos_vm5']
+3 - usage: 81.0 | mapping ['aos_vm8', 'aos_vm6']
+]0;vagrant@vagrant: /vagrant/cpu/test[01;32mvagrant@vagrant[00m:[01;34m/vagrant/cpu/test[00m$ exit
+exit
+
+Script done on 2022-09-19 01:34:05+00:00 [COMMAND_EXIT_CODE="0"]
