@@ -13,20 +13,18 @@ int is_exit = 0; // DO NOT MODIFY THIS VARIABLE
 
 
 double *domainPreviousUsage = NULL;
-double *pcpusPreviousUsage = NULL;
 
 struct DomainLoad
 {
 	int index;
 	float usage;
 	int pcpuIndex;
+	int pcpuPrevIndex;
 };
 
 //Helper functions used to compare and sort domainLoad structures
 int cmp(const void *a, const void *b);
 int min(const void *a,int size);
-//void selectionSort(struct DomainLoad *DomainLoadPtr, int size);
-//void swap(struct DomainLoad *xPtr, struct Domainload *yPtr);
 
 
 void CPUScheduler(virConnectPtr conn,int interval);
@@ -92,19 +90,6 @@ void CPUScheduler(virConnectPtr conn, int interval)
 	int npcpu = VIR_NODEINFO_MAXCPUS(host); // number of physical cpu 
 	printf("Number of PCPU using virNodGetInfo: %d\n",npcpu);
 
-	/*
-	unsigned char * cpumap; 
-	unsigned int * npcpu = malloc(sizeof(unsigned int));
-
-	if (virNodeGetCPUMap(conn, &cpumap,npcpu,0) == -1)
-	{
-		printf("Failed to get host info\n");
-	}
-
-	printf("Number of PCPU using virtNodeGetCPUMap: %d\n",*npcpu);
-	printf("BitMap of total CPU: %x\n",*cpumap);
-	*/
-
 	// get list of domain
 	virDomainPtr *domainList;
 	unsigned int flags = VIR_CONNECT_LIST_DOMAINS_RUNNING;
@@ -114,12 +99,13 @@ void CPUScheduler(virConnectPtr conn, int interval)
 	if ( nDomain < 0)
 	{
 		printf("Failed to get list of domains.\n");
+		return;
 	}
 
 
 	//Getting start time interval usage
-	double * pcpusUsage = calloc(sizeof(double),npcpu);
 	double * domainUsage = calloc(sizeof(double),nDomain);
+	struct DomainLoad *domainLoadPtr = calloc(sizeof(struct DomainLoad), nDomain);
 
 	for (size_t i = 0; i < nDomain ; i++)
 	{
@@ -132,8 +118,8 @@ void CPUScheduler(virConnectPtr conn, int interval)
 
 		
 		int nvcpu = domainInfo.nrVirtCpu;
-		
 		//printf("Domain %ld has %d vcpu.\n",i,nvcpu);
+
 
 		int maplen = VIR_CPU_MAPLEN(npcpu);
 		unsigned char *cpumap = calloc(nvcpu,maplen);
@@ -147,41 +133,43 @@ void CPUScheduler(virConnectPtr conn, int interval)
 		//printf("Domain[%ld] Time used by VCPU: [%lld] ---> PCPU: [%d]\n",i,(vcpuInfo->cpuTime),vcpuInfo->cpu);
 		//printf("CPUMAP for VCPU[%d]: %x\n",vcpuInfo->number,*cpumap);
 
-		pcpusUsage[vcpuInfo->cpu] += (vcpuInfo->cpuTime);
-
 		domainUsage[i] = (vcpuInfo->cpuTime);
+		(domainLoadPtr+i)->pcpuPrevIndex = vcpuInfo->cpu;
 
 		free(vcpuInfo);
 		free(cpumap);
 	}
 
-	/* Print code for end usage
-	for (size_t i = 0; i < npcpu; i++)
-	{
-		printf("PCPU[%ld] Start usage: %f%%\n",i,pcpusUsage[i]);
-	}
-	*/
-
-
 	if (domainPreviousUsage == NULL)
 	{
 		//printf("first iteration with no prior usage info\n");
 		domainPreviousUsage = domainUsage;
-		pcpusPreviousUsage = pcpusUsage;
 		domainUsage = NULL;
-		pcpusUsage = NULL;
 
+		for (size_t i = 0; i < nDomain; i++)
+		{
+			virDomainFree(domainList[i]);
+		}
+
+		free(domainList);
+		free(domainLoadPtr);
 		return;
 	}
-	
-	//printf("Have previous usage info\n");
 
 	double * pcpusUtilization = calloc(sizeof(double),npcpu);
+	
+	for (size_t i = 0; i < nDomain; i++)
+	{
+		(domainLoadPtr + i)->usage = (domainUsage[i] - domainPreviousUsage[i]) * 100 / time;
+		(domainLoadPtr + i)->index = i;
+		// printf("CPU Usage for domain[%d] is: %f.\n", (domainLoadPtr + i)->index, (domainLoadPtr + i)->usage);
+		pcpusUtilization[(domainLoadPtr+i)->pcpuPrevIndex] += (domainLoadPtr + i)->usage;
+	}
+
 	
 
 	for (size_t i = 0; i < npcpu; i++)
 	{
-		pcpusUtilization[i] = ((pcpusUsage[i]- pcpusPreviousUsage[i])/time)*100;
 		printf("PCPU[%ld] utilzation: %f\n",i,pcpusUtilization[i]);
 	}
 	
@@ -207,13 +195,7 @@ void CPUScheduler(virConnectPtr conn, int interval)
 	// pin VCPU to PCPU if StdD is higher than 5%
 	if (SD > 5)
 	{
-		struct DomainLoad *domainLoadPtr = calloc(sizeof(struct DomainLoad),nDomain);
-		for (size_t i = 0; i < nDomain; i++)
-		{
-			(domainLoadPtr + i)->usage = (domainUsage[i] - domainPreviousUsage[i]) * 100 / time;
-			(domainLoadPtr + i)->index = i;
-			// printf("CPU Usage for domain[%d] is: %f.\n", (domainLoadPtr + i)->index, (domainLoadPtr + i)->usage);
-		}
+		
 
 		// Sort in descending order of load
 		qsort(domainLoadPtr, nDomain, sizeof(struct DomainLoad), cmp);
@@ -262,28 +244,29 @@ void CPUScheduler(virConnectPtr conn, int interval)
 			
 			VIR_USE_CPU(cpumap,pinPcpu);
 
-			if (virDomainPinVcpu(domainList[i],0,cpumap,maplen) == -1)
+			if (virDomainPinVcpu(domainList[domainIndex],0,cpumap,maplen) == -1)
 			{
 				printf("Failed to pin vcpu to pcpu for domain # %d\n", domainIndex);
 			}
 
 			//printf("Domain[%d]: VCPU pinned to PCPU[%d] with bitmap: %x.\n",domainIndex,pinPcpu,*cpumap);
 			free(cpumap);
-			
+			virDomainFree(domainList[domainIndex]);
 		}
 
 		//free calloc	
+		free(bucketArray);
 	}
 
+
+
 	// Free previous usage memory region and point to current usage
+	free(pcpusUtilization);
+	free(domainLoadPtr);
 	free(domainPreviousUsage);
-	free(pcpusPreviousUsage);
+	free(domainList);
 	domainPreviousUsage = domainUsage;
-	pcpusPreviousUsage = pcpusUsage;
 	domainUsage = NULL;
-	pcpusUsage = NULL;
-	
-		
 }
 
 int cmp(const void *a, const void *b)
