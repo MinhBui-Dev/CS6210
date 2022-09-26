@@ -14,17 +14,11 @@ int is_exit = 0; // DO NOT MODIFY THE VARIABLE
 struct domainMemUsage{
 	unsigned long long actual;
 	unsigned long long unused;
-	long memIncr;
-	long memDecr;
-	int memReclaimedBool;
 	int memDemandingBool;
-	int memReleasedBool;
 	int memFreeCount;
 };
 
 struct domainMemUsage *prevUsage = NULL;
-int allocatedMem = 0;
-
 
 void MemoryScheduler(virConnectPtr conn,int interval);
 
@@ -141,11 +135,7 @@ void MemoryScheduler(virConnectPtr conn, int interval)
 
 		for (size_t i = 0; i < nDomain; i++)
 		{
-			(memUsage + i)->memReclaimedBool = 0;
 			(memUsage + i)->memDemandingBool = 0;
-			(memUsage + i)->memReleasedBool = 0;
-			(memUsage + i)->memIncr = 0;
-			(memUsage + i)->memDecr = 0;
 			(memUsage+i)->memFreeCount = 0;
 		}
 
@@ -160,10 +150,15 @@ void MemoryScheduler(virConnectPtr conn, int interval)
 	// printf("Continue with current usage\n");
 	int needMemoryBoolean[nDomain];
 	long memoryConsumptionRate[nDomain];
-	memset(&needMemoryBoolean, 0, sizeof(int) * nDomain);
+	int idleDomain[nDomain];
 
-	int releaseMemory[nDomain];
-	memset(&releaseMemory, 0, sizeof(int) * nDomain);
+	for (size_t i = 0; i < nDomain; i++)
+	{
+		needMemoryBoolean[i] = 0;
+		memoryConsumptionRate[i] = 0;
+		idleDomain[i] = 0;
+		(memUsage + i)->memDemandingBool = 0;
+	}
 
 	for (size_t i = 0; i < nDomain; i++)
 	{
@@ -172,11 +167,6 @@ void MemoryScheduler(virConnectPtr conn, int interval)
 		// Determine if domain is demanding memory
 		long dUnused = ((prevUsage + i)->unused - (memUsage + i)->unused) / 1;
 		long dActual = ((prevUsage + i)->actual - (memUsage + i)->actual) / 1;
-
-
-		// if prevConsumpt + dUnused > prevConsumpt -> Demanding memory
-		// dActual < 0 -> New memory allocated
-		// dUnused > 0 -> Consuming memory
 
 		if ((dUnused > 5 && dActual == 0) || (dActual < 0 && (prevUsage + i)->memDemandingBool == 1))
 		{
@@ -190,17 +180,6 @@ void MemoryScheduler(virConnectPtr conn, int interval)
 				needMemoryBoolean[i] = 1;
 				// printf("Domain[%ld] needs memory\n",i);
 			}
-			else
-			{
-				needMemoryBoolean[i] = 0;
-				// printf("Domain[%ld] does not need memory\n",i);
-			}
-		}
-		else
-		{
-			(memUsage + i)->memDemandingBool = 0;
-			memoryConsumptionRate[i] = 0;
-			//memoryConsumptionRate[i] = 0;
 		}
 
 		// Determine if domain's process releasing memory
@@ -210,40 +189,32 @@ void MemoryScheduler(virConnectPtr conn, int interval)
 			if ((memUsage + i)->memFreeCount == 3)
 			{
 				//set flag to reclaimed memory
-				(memUsage + i)->memReleasedBool = 1;
-				releaseMemory[i] = 1;
+				idleDomain[i] = 1;
 
 				//reset count
 				(memUsage + i)->memFreeCount = 0;
 
 				printf("Domain[%ld] is releasing memory\n", i);
 			}
-			else
-			{
-				(memUsage + i)->memReleasedBool = 0;
-				releaseMemory[i] = 0;
-			}
 		}
 		else
 		{
 			(memUsage + i)->memFreeCount = 0;
-			(memUsage + i)->memReleasedBool = 0;
-			releaseMemory[i] = 0;
 		}
 	}
 
 	// check if there is domain releasing mem
-	int idleDomain = 0;
+	int idleDomainTotal = 0;
 	for (size_t i = 0; i < nDomain; i++)
 	{
-		idleDomain += releaseMemory[i];
+		idleDomainTotal += idleDomain[i];
 	}
 
-	if (idleDomain > 0)
+	if (idleDomainTotal > 0)
 	{
 		for (size_t i = 0; i < nDomain; i++)
 		{
-			if (releaseMemory[i] == 1 && memUsage[i].actual > actualMin)
+			if (idleDomain[i] == 1 && memUsage[i].actual > actualMin)
 			{
 				int memDecrement = MIN(memoryIncrement, memUsage[i].unused - unusedMin);
 				if (virDomainSetMemory(domainList[i], MAX(memUsage[i].actual - memDecrement, actualMin) * 1024) == -1)
@@ -253,34 +224,22 @@ void MemoryScheduler(virConnectPtr conn, int interval)
 				else
 				{
 					printf("Reclaimed from idle memory domain[%ld]\n", i);
-					(memUsage + i)->memReleasedBool = 1;
 				}
 			}
-			else
-			{
-				(memUsage + i)->memReleasedBool = 0;
-			}
-		}
-	}
-	else
-	{
-		for (size_t i = 0; i < nDomain; i++)
-		{
-			(memUsage + i)->memReleasedBool = 0;
 		}
 	}
 
 	// check if there is a need for memory
-	int needMem = 0;
+	int nDomainNeedMem = 0;
 	for (size_t i = 0; i < nDomain; i++)
 	{
-		needMem += needMemoryBoolean[i];
+		nDomainNeedMem += needMemoryBoolean[i];
 	}
 
-	if (needMem > 0)
+	if (nDomainNeedMem > 0)
 	{
 		// reclaiming memory
-		unsigned long long memReclaimedRate[nDomain];
+		// unsigned long long memReclaimedRate[nDomain];
 		// get Host Free Memory
 
 		for (size_t i = 0; i < nDomain; i++)
@@ -292,52 +251,16 @@ void MemoryScheduler(virConnectPtr conn, int interval)
 				{
 					printf("Failed to reclaimed memory from domain[%ld].\n", i);
 				}
-				else
-				{
-					memReclaimedRate[i] = MIN(memDecrement, memUsage[i].actual - actualMin);
-					printf("Mem reclaimed from domain[%ld]: %llu\n", i, memReclaimedRate[i]);
-					memUsage[i].memReclaimedBool = 1;
-				}
-			}
-			else
-			{
-				memReclaimedRate[i] = 0;
-				memUsage[i].memReclaimedBool = 0;
 			}
 		}
-
-		unsigned long long memReclaimedTotal = 0;
-
-		for (size_t i = 0; i < nDomain; i++)
-		{
-			memReclaimedTotal += memReclaimedRate[i];
-		}
-
-		printf("Total mem reclaimed: %llu\n", memReclaimedTotal);
 
 		long memAvailableTotal = (virNodeGetFreeMemory(conn) / 1024) / 1024; // Convert to MB
 
-		/* long totalConsumption = 0;
-		for (size_t i = 0; i < nDomain; i++)
-		{
-			totalConsumption += memoryConsumptionRate[i];
-		}
-
-		long memToAllocate = memAvailableTotal; */
-
-		// if (memReclaimedTotal > (1.5*totalConsumption))
-		// {
-		// 	memToAllocate = memReclaimedTotal;
-		// }
-		// else
-		// {
-		// 	memToAllocate = memAvailableTotal;
-		// }
 
 		if (memAvailableTotal > hostMin)
 		{
 			// Check partition vs need vs max host
-			unsigned long long memPartition = (memAvailableTotal - hostMin) / needMem;
+			unsigned long long memPartition = (memAvailableTotal - hostMin) / nDomainNeedMem;
 
 			printf("Host Memory[%lu] --- MemToAllocate[%ld]\n", memAvailableTotal, (memAvailableTotal - hostMin));
 
@@ -346,17 +269,16 @@ void MemoryScheduler(virConnectPtr conn, int interval)
 			{
 
 				maxConsumption = MAX(maxConsumption,memoryConsumptionRate[i]);
-				printf("Max Consumption [%ld] vs Current Consumption [%ld]\n", maxConsumption, memoryConsumptionRate[i]);
+				//printf("Max Consumption [%ld] vs Current Consumption [%ld]\n", maxConsumption, memoryConsumptionRate[i]);
 			}
 
 			memoryIncrement = MAX(memoryIncrement,1.5*maxConsumption);
 
-			printf("Memory Increment: %d\n", memoryIncrement);
-
+			//printf("Memory Increment: %d\n", memoryIncrement);
 
 			memPartition = MIN(memPartition, memoryIncrement);
 
-			printf("Memory Partition: %lld\n", memPartition);
+			//printf("Memory Partition: %lld\n", memPartition);
 
 			for (size_t i = 0; i < nDomain; i++)
 			{
@@ -366,21 +288,8 @@ void MemoryScheduler(virConnectPtr conn, int interval)
 					{
 						printf("Failed to allocated memory from domain[%ld].\n", i);
 					}
-					else
-					{
-						(memUsage + i)->memIncr = MIN(memPartition, memUsage[i].actual - maxMem);
-					}
-
-					allocatedMem = 1;
 				}
 			}
-		}
-	}
-	else
-	{
-		for (size_t i = 0; i < nDomain; i++)
-		{
-			(memUsage + i)->memReclaimedBool = 0;
 		}
 	}
 	free(prevUsage);
